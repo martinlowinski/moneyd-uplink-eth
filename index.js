@@ -42,6 +42,8 @@ async function configure ({ testnet, advanced }) {
     plugin: require.resolve('ilp-plugin-ethereum-asym-client'),
     assetCode: 'ETH',
     assetScale: 18,
+    sendRoutes: false,
+    receiveRoutes: false,
     balance: {
       minimum: '-Infinity',
       maximum: '20000000000000000',
