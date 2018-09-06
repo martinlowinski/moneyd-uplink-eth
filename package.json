@@ -12,7 +12,7 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "good-table": "^1.0.3",
-    "ilp-plugin-ethereum-asym-client": "^1.1.0",
+    "ilp-plugin-ethereum-asym-server": "github:interledgerjs/ilp-plugin-ethereum-asym-server#ko-refactor",
     "inquirer": "^5.2.0"
   },
   "devDependencies": {
@@ -21,6 +21,7 @@
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1"
+    "eslint-plugin-standard": "^3.0.1",
+    "typescript": "^3.0.3"
   }
 }
