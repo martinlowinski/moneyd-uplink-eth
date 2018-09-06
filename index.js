@@ -35,7 +35,7 @@ async function configure ({ testnet, advanced }) {
     type: 'input',
     name: 'name',
     message: 'Name to assign to this channel:',
-    default: base64url(crypto.randomBytes(32)) 
+    default: base64url(crypto.randomBytes(32))
   }]
   for (const field of fields) {
     res[field.name] = (await inquirer.prompt(field))[field.name]
