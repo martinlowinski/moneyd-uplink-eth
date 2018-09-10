@@ -66,7 +66,7 @@ async function configure ({ testnet, advanced }) {
     options: {
       role: 'client',
       ethereumAddress,
-      web3: util.inspect(web3),
+      web3: web3,
       balance: {
         minimum: '-Infinity',
         maximum: '20000000',
