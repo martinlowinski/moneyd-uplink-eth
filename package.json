@@ -12,9 +12,8 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "good-table": "^1.0.3",
-    "ilp-plugin-ethereum-asym-server": "github:interledgerjs/ilp-plugin-ethereum-asym-server#ko-refactor",
-    "inquirer": "^5.2.0",
-    "web": "0.0.2"
+    "ilp-plugin-ethereum-asym-server": "github:strata-labs/ilp-plugin-ethereum-asym-server#dr-eth-deploy",
+    "inquirer": "^5.2.0"
   },
   "devDependencies": {
     "eslint": "^4.16.0",
