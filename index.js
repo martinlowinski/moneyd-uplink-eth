@@ -1,12 +1,10 @@
 'use strict'
-const Web3 = require('web3')
 const crypto = require('crypto')
 const table = require('good-table')
 const chalk = require('chalk')
 const inquirer = require('inquirer')
 const Plugin = require('ilp-plugin-ethereum-asym-server')
 const connectorList = require('./connector_list.json')
-const util = require('util')
 const parentBtpHmacKey = 'parent_btp_uri'
 const base64url = buf => buf
   .toString('base64')
@@ -45,12 +43,6 @@ async function configure ({ testnet, advanced }) {
     throw new Error('This provider is not supported.')
   }
 
-  // create web3 provider, and add secret
-  const web3 = new Web3('wss://mainnet.infura.io/ws')
-  web3.eth.accounts.wallet.add(res.account)
-  const ethereumAddress = web3.eth.accounts.wallet[0].address
-  console.log(ethereumAddress)
-
   // create btp server uri for upstream
   const btpName = res.name || ''
   const btpSecret = hmac(hmac(parentBtpHmacKey, res.parent + btpName), res.provider).toString('hex')
@@ -65,8 +57,7 @@ async function configure ({ testnet, advanced }) {
     receiveRoutes: false,
     options: {
       role: 'client',
-      ethereumAddress,
-      web3: web3,
+      ethereumSecret: res.account,
       balance: {
         minimum: '-Infinity',
         maximum: '20000000',
