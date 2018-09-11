@@ -3,8 +3,8 @@ const crypto = require('crypto')
 const table = require('good-table')
 const chalk = require('chalk')
 const inquirer = require('inquirer')
-const Plugin = require('ilp-plugin-ethereum-asym-server')
-const { convert, Unit } = require('ilp-plugin-ethereum-asym-server/build/account')
+const Plugin = require('ilp-plugin-ethereum')
+const { convert, Unit } = require('ilp-plugin-ethereum/build/account')
 const connectorList = require('./connector_list.json')
 const parentBtpHmacKey = 'parent_btp_uri'
 const base64url = buf => buf
