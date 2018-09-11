@@ -12,13 +12,13 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "good-table": "^1.0.3",
-    "ilp-plugin-ethereum-asym-server": "github:strata-labs/ilp-plugin-ethereum-asym-server#dr-eth-deploy",
+    "ilp-plugin-ethereum": "github:interledgerjs/ilp-plugin-ethereum-asym-server#ko-refactor",
     "inquirer": "^5.2.0"
   },
   "devDependencies": {
     "eslint": "^4.16.0",
     "eslint-config-standard": "^11.0.0-beta.0",
-    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
