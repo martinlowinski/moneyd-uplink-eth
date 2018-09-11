@@ -4,6 +4,7 @@ const table = require('good-table')
 const chalk = require('chalk')
 const inquirer = require('inquirer')
 const Plugin = require('ilp-plugin-ethereum-asym-server')
+const { convert, Unit } = require('ilp-plugin-ethereum-asym-server/build/account')
 const connectorList = require('./connector_list.json')
 const parentBtpHmacKey = 'parent_btp_uri'
 const base64url = buf => buf
@@ -50,14 +51,16 @@ async function configure ({ testnet, advanced }) {
 
   return {
     relation: 'parent',
-    plugin: require.resolve('ilp-plugin-ethereum-asym-server'),
+    plugin: require.resolve('ilp-plugin-ethereum'),
     assetCode: 'ETH',
     assetScale: 9,
     sendRoutes: false,
     receiveRoutes: false,
     options: {
       role: 'client',
-      ethereumSecret: res.account,
+      ethereumPrivateKey: res.account,
+      ethereumProvider: 'wss://mainnet.infura.io/ws',
+      outgoingChannelAmount: '10000000',
       balance: {
         minimum: '-Infinity',
         maximum: '20000000',
