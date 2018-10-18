@@ -1,7 +1,9 @@
 {
   "live": [
-    "btp.strata-ilsp-3.com"
+    "ilp.kava.io/eth"
   ],
   "test": [
+    "test.ilp.kava.io/eth",
+    "btp.strata-ilsp-3.com:8080"
   ]
 }
