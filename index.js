@@ -1,12 +1,11 @@
 'use strict'
-const crypto = require('crypto')
-const table = require('good-table')
-const chalk = require('chalk')
+
+const { randomBytes, createHmac } = require('crypto')
 const inquirer = require('inquirer')
-const Plugin = require('ilp-plugin-ethereum')
 const { convert, Unit } = require('ilp-plugin-ethereum/build/account')
 const connectorList = require('./connector_list.json')
 const parentBtpHmacKey = 'parent_btp_uri'
+
 const base64url = buf => buf
   .toString('base64')
   .replace(/=/g, '')
@@ -19,12 +18,8 @@ async function configure ({ testnet, advanced }) {
   const res = {}
   const fields = [{
     type: 'input',
-    name: 'account',
-    message: 'Ethereum account (secret):'
-  }, {
-    type: 'input',
-    name: 'provider',
-    message: 'Ethereum provider:'
+    name: 'privateKey',
+    message: 'Ethereum private key:'
   }, {
     type: 'input',
     name: 'parent',
@@ -33,21 +28,22 @@ async function configure ({ testnet, advanced }) {
   }, {
     type: 'input',
     name: 'name',
-    message: 'Name to assign to this channel:',
-    default: base64url(crypto.randomBytes(32))
+    message: 'Name to assign to this connection:',
+    default: base64url(randomBytes(32))
   }]
+
   for (const field of fields) {
     res[field.name] = (await inquirer.prompt(field))[field.name]
   }
 
-  if (res.provider.toLowerCase() !== 'web3') {
-    throw new Error('This provider is not supported.')
-  }
+  // For now, use HTTP-RPC; Websocket provider has too many issues
+  const ethereumProvider = testnet
+    ? 'https://kovan.infura.io/bXIbx0x6ofEuDANTSeKI'
+    : 'https://mainnet.infura.io/bXIbx0x6ofEuDANTSeKI'
 
-  // create btp server uri for upstream
-  const btpName = res.name || ''
-  const btpSecret = hmac(hmac(parentBtpHmacKey, res.parent + btpName), res.provider).toString('hex')
-  const btpServer = 'btp+wss://' + btpName + ':' + btpSecret + '@' + res.parent
+  // Create btp server uri for upstream
+  const btpSecret = hmac(hmac(parentBtpHmacKey, res.parent + res.name), res.privateKey).toString('hex')
+  const btpServer = 'btp+wss://' + res.name + ':' + btpSecret + '@' + res.parent
 
   return {
     relation: 'parent',
@@ -58,155 +54,29 @@ async function configure ({ testnet, advanced }) {
     receiveRoutes: false,
     options: {
       role: 'client',
-      ethereumPrivateKey: res.account,
-      ethereumProvider: 'wss://mainnet.infura.io/ws',
-      outgoingChannelAmount: '10000000',
+      ethereumPrivateKey: res.privateKey,
+      ethereumProvider,
+      // Open channels for ~$2 by default
+      outgoingChannelAmount: convert('0.01', Unit.Eth, Unit.Gwei),
       balance: {
-        minimum: '-Infinity',
-        maximum: '20000000',
-        settleThreshold: '5000000',
-        settleTo: '10000000'
+        // Fulfill up to ~$1 without receiving money
+        maximum: convert('0.01', Unit.Eth, Unit.Gwei),
+        // Stay prefunded by ~40¢
+        settleTo: convert('0.004', Unit.Eth, Unit.Gwei),
+        // Settle up on every packet
+        settleThreshold: convert('0.004', Unit.Eth, Unit.Gwei)
       },
       server: btpServer
     }
   }
 }
 
-const commands = [
-  {
-    command: 'info',
-    describe: 'Get info about your ETH account and payment channels',
-    builder: {},
-    handler: (config, argv) => makeUplink(config).printChannels()
-  },
-  {
-    command: 'cleanup',
-    describe: 'Clean up unused payment channels',
-    builder: {},
-    handler: (config, argv) => makeUplink(config).cleanupChannels()
-  },
-  {
-    command: 'topup',
-    describe: 'Pre-fund your balance with connector',
-    builder: {
-      amount: {
-        description: 'amount to send to connector',
-        demandOption: true
-      }
-    },
-    handler: (config, {amount}) => makeUplink(config).topup(amount)
-  }
-]
-
-function makeUplink (config) {
-  return new EthUplink(config)
-}
-
-class EthUplink {
-  constructor (config) {
-    this.config = config
-    this.pluginOpts = config.options
-    this.plugin = null
-    this.subscribed = false
-  }
-
-  async printChannels () {
-    await this._printChannels(await this._listChannels())
-    await this._close()
-  }
-
-  async _printChannels (channels) {
-    console.log(chalk.green('account:'), this.pluginOpts.account)
-    const balance = await this.plugin._web3.eth.getBalance(this.pluginOpts.account)
-    console.log(chalk.green('balance:'), balance.toString() + ' WEI')
-    if (!channels.length) {
-      return console.error('No channels found')
-    }
-    console.log(table([
-      [ chalk.green('index'),
-        chalk.green('receiver'),
-        chalk.green('spent'),
-        chalk.green('value'),
-        chalk.green('state') ],
-      ...channels.map(formatChannelToRow)
-    ]))
-  }
-
-  async cleanupChannels () {
-    const api = await this._api()
-    const allChannels = await this._listChannels()
-    await this._printChannels(allChannels)
-    if (!allChannels.length) return
-    const result = await inquirer.prompt({
-      type: 'checkbox',
-      name: 'marked',
-      message: 'Select channels to close:',
-      choices: allChannels.map((_, i) => i.toString())
-    })
-    const channels = result.marked.map((index) => allChannels[+index])
-
-    for (const channel of channels) {
-      console.log('Closing channel ' + channel.channelId)
-      try {
-        await api.close(channel.channelId)
-      } catch (err) {
-        console.error('Warning for channel ' + channel.channelId + ':', err.message)
-      }
-    }
-    await this._close()
-  }
-
-  async _listChannels () {
-    const api = await this._api()
-    console.log('fetching channels...')
-    return api.channels()
-  }
-
-  async topup (amount) {
-    const plugin = new Plugin(this.pluginOpts)
-    await plugin.connect()
-    await plugin.sendMoney(amount)
-    await plugin.disconnect()
-  }
-
-  async _api () {
-    if (!this.plugin) {
-      this.plugin = new Plugin(this.pluginOpts)
-      await this.plugin.connect()
-    }
-    return this.plugin._machinomy
-  }
-
-  async _close () {
-    if (this.plugin) {
-      await this.plugin.disconnect()
-    }
-  }
-}
-
-const channelStates = {
-  0: 'open',
-  1: 'settling',
-  2: 'settled'
-}
-
-function formatChannelToRow (c, i) {
-  return [
-    String(i),
-    c.receiver,
-    c.spent.toString(),
-    c.value.toString(),
-    channelStates[c.state] || 'unknown'
-  ]
-}
-
-function hmac (key, message) {
-  const h = crypto.createHmac('sha256', key)
-  h.update(message)
-  return h.digest()
-}
+const hmac = (key, message) =>
+  createHmac('sha256', key)
+    .update(message)
+    .digest()
 
 module.exports = {
   configure,
-  commands
+  commands: []
 }
