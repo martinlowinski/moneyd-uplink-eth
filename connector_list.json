@@ -4,6 +4,6 @@
   ],
   "test": [
     "test.ilp.kava.io/eth",
-    "btp.strata-ilsp-3.com:8080"
+    "btp.strata-ilsp-3.com:8081"
   ]
 }
