@@ -1,8 +1,13 @@
 'use strict'
 
+const {
+  AssetUnit,
+  convert,
+  eth,
+  gwei,
+} = require('@kava-labs/crypto-rate-utils')
 const { randomBytes, createHmac } = require('crypto')
 const inquirer = require('inquirer')
-const { convert, Unit } = require('ilp-plugin-ethereum/build/account')
 const connectorList = require('./connector_list.json')
 const parentBtpHmacKey = 'parent_btp_uri'
 
@@ -57,14 +62,14 @@ async function configure ({ testnet, advanced }) {
       ethereumPrivateKey: res.privateKey,
       ethereumProvider,
       // Open channels for ~$2 by default
-      outgoingChannelAmount: convert('0.01', Unit.Eth, Unit.Gwei),
+      outgoingChannelAmount: convert(gwei(10000000), eth()),
       balance: {
         // Fulfill up to ~$1 without receiving money
-        maximum: convert('0.01', Unit.Eth, Unit.Gwei),
+        maximum: convert(gwei(5000000), eth()),
         // Stay prefunded by ~40¢
-        settleTo: convert('0.004', Unit.Eth, Unit.Gwei),
+        settleTo: convert(gwei(2000000), eth()),
         // Settle up on every packet
-        settleThreshold: convert('0.004', Unit.Eth, Unit.Gwei)
+        settleThreshold: convert(gwei(2000000), eth())
       },
       server: btpServer
     }

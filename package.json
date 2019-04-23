@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@kava-labs/crypto-rate-utils": "^2.0.2",
     "chalk": "^2.3.0",
     "good-table": "^1.0.3",
     "ilp-plugin-ethereum": "^3.0.0-beta.3",
